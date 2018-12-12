@@ -12,6 +12,7 @@
 
 #include "VideoDecoder.h"
 #include "Visualization.h"
+#include "PositionEstimator.h"
 
 using namespace std;
 using namespace cv;
@@ -24,6 +25,7 @@ int main()
 
 	VideoDecoder decoder = VideoDecoder(chessBoardIntersections, calibrationSquareDimension);
 	Visualization visualization = Visualization("display");
+	PositionEstimator estimator = PositionEstimator();
 
 	bool isPicValid = false;
 	bool isFrameValid = false;
@@ -42,8 +44,12 @@ int main()
 				r = decoder.getRotVec();
 				t = decoder.getTrVec();
 
-				cout << "tr: " << t.at<double>(0, 0) << ", " << t.at<double>(1, 0) << ", " << t.at<double>(2, 0) << endl;
-				cout << "rt: " << r.at<double>(0, 0) << ", " << r.at<double>(1, 0) << ", " << r.at<double>(2, 0) << endl;			
+				//cout << "tr: " << t.at<double>(0, 0) << ", " << t.at<double>(1, 0) << ", " << t.at<double>(2, 0) << endl;
+				//cout << "rt: " << r.at<double>(0, 0) << ", " << r.at<double>(1, 0) << ", " << r.at<double>(2, 0) << endl;
+
+				estimator.addNewPoseVectors(t, r);
+				estimator.calculatePosition();
+
 			}
 
 			else {

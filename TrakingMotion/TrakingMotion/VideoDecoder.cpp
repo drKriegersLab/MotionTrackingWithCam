@@ -19,7 +19,7 @@ VideoDecoder::VideoDecoder(Size chessboardIntersections, float chessboardSqueare
 {
 	Mat rVec = Mat::zeros(3, 1, CV_64FC1);
 	Mat tVec = Mat::zeros(3, 1, CV_64FC1);
-	capture = new VideoCapture(0);
+	capture = new VideoCapture(1);
 
 	chessboardDimensions = chessboardIntersections;
 	calibrationSquareDimension = chessboardSqueareDimension;
