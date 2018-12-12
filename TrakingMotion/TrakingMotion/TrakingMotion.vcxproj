@@ -154,6 +154,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="PositionEstimator.h" />
+    <ClInclude Include="VideoDecoder.h" />
+    <ClInclude Include="Visualization.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -162,7 +165,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TrakingMotion.cpp" />
+    <ClCompile Include="PositionEstimator.cpp" />
+    <ClCompile Include="TrakingMotionMain.cpp" />
+    <ClCompile Include="VideoDecoder.cpp" />
+    <ClCompile Include="Visualization.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
