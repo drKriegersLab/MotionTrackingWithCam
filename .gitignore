@@ -6,3 +6,9 @@ calib/calib/x64/Debug/
 *.lib
 
 calib/\.vs/
+
+TrakingMotion/\.vs/
+
+TrakingMotion/x64/Debug/
+
+TrakingMotion/TrakingMotion/x64/Debug/
