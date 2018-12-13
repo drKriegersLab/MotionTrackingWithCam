@@ -10,6 +10,25 @@ using namespace cv;
 
 PositionEstimator::PositionEstimator()
 {
+	KF = KalmanFilter(4, 2, 0);
+	KF.transitionMatrix = (Mat_<float>(4, 4) << 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1);
+	//Mat_<float> measurement_(2, 1);
+	//measurement = measurement_;
+	measurement.create(2, 1);
+	measurement.setTo(Scalar(0));
+
+	KF.statePre.at<float>(0) = 0.0; //relpos.x at the beginning
+	KF.statePre.at<float>(1) = 0.0; // relpos.y at the beginning
+	KF.statePre.at<float>(2) = 0.0;
+	KF.statePre.at<float>(3) = 0.0;
+
+	setIdentity(KF.measurementMatrix);
+	setIdentity(KF.processNoiseCov, Scalar::all(1e-4));
+	setIdentity(KF.measurementNoiseCov, Scalar::all(10));
+	setIdentity(KF.errorCovPost, Scalar::all(.1));
+	kalmanv.clear();
+	
+	
 }
 
 
@@ -31,6 +50,7 @@ void PositionEstimator::calculatePosition() {
 	Coordinates relPosLast;
 	Coordinates posCurr;
 	Coordinates translateVectCurr;
+	Coordinates filteredRelPos;
 
 	vector<Coordinates> diffVect;
 
@@ -60,8 +80,25 @@ void PositionEstimator::calculatePosition() {
 		//cout << " vx: " << relVel.x;
 		//cout << " vy: " << relVel.y << endl;
 
-
 		
+		Mat prediction = KF.predict();
+		Point predictPoint(prediction.at<float>(0), prediction.at<float>(1));
+
+		// measure
+		measurement(0) = relPos.x;
+		measurement(1) = relPos.y;
+
+		// update
+		Mat estimated = KF.correct(measurement);
+
+		Point statePoint(estimated.at<float>(0), estimated.at<float>(1));
+		filteredRelPos.x = estimated.at<float>(0);
+		filteredRelPos.y = estimated.at<float>(1);
+		filteredRelPos.Sum = sqrt(filteredRelPos.x * filteredRelPos.x + filteredRelPos.y * filteredRelPos.y);
+		filteredPastRelPosVects.push_back(filteredRelPos);
+
+		cout << " x: " << filteredRelPos.x;
+		cout << " y: " << filteredRelPos.y << endl;
 
 		showGraph();
 
@@ -99,12 +136,24 @@ void PositionEstimator::showGraph() {
 		posYbefore = windowSizeY - (int)(pastRelPosVects[cycVec].x * scale);
 		line(img, Point(posX, posY), Point(posXbefore, posYbefore), Scalar(255, 0, 0), 2);
 	}	
-	
 
+	for (int cycVec = 1; cycVec < filteredPastRelPosVects.size(); cycVec++)
+	{
+		posX = (int)(double(windowSizeX) / 2 - (filteredPastRelPosVects[cycVec - 1].y * scale));
+		posY = windowSizeY - (int)(filteredPastRelPosVects[cycVec - 1].x * scale);
+
+		posXbefore = (int)(double(windowSizeX) / 2 - (filteredPastRelPosVects[cycVec].y * scale));
+		posYbefore = windowSizeY - (int)(filteredPastRelPosVects[cycVec].x * scale);
+		line(img, Point(posX, posY), Point(posXbefore, posYbefore), Scalar(0, 0, 255), 2);
+	}
+
+	
+	/*
 	cout << " posX: " << posX;
 	cout << " posY: " << posY;
 	cout << " posXbefore: " << posXbefore;
 	cout << " posYbefore: " << posYbefore;
+	*/
 	//cout << " vx: " << relVel.x;
 	//cout << " vy: " << relVel.y << endl;
 

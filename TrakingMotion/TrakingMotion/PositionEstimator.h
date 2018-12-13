@@ -1,5 +1,6 @@
 #pragma once
 #include "opencv2/core.hpp"
+#include "opencv2/video/tracking.hpp"
 
 class PositionEstimator
 {
@@ -26,6 +27,11 @@ private:
 	std::vector<Coordinates> pastRelPosVects;
 	
 	Coordinates translateVectOrig;
+
+	cv::KalmanFilter KF;
+	cv::Mat_<float> measurement;
+	std::vector<cv::Point> kalmanv;
+	std::vector<Coordinates> filteredPastRelPosVects;
 
 
 	void showGraph();

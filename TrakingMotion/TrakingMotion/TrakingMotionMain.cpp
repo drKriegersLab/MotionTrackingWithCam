@@ -19,6 +19,8 @@ using namespace cv;
 
 int main()
 {
+
+
 	Size chessBoardIntersections = Size(7, 7);
 	float calibrationSquareDimension = 0.02f;
 	Mat r, t;
