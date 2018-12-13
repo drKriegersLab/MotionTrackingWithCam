@@ -2,39 +2,62 @@
 #include "opencv2/core.hpp"
 #include "opencv2/video/tracking.hpp"
 
+struct Coordinates
+{
+	double x;
+	double y;
+	double Sum;
+};
+
 class PositionEstimator
 {
 public:
-	PositionEstimator();
 
+	/* PUBLIC METHODS */
+	PositionEstimator(int cameraFramePerSec);
 	~PositionEstimator();
 
-	void addNewPoseVectors(cv::Mat translationVector, cv::Mat rotationVector);
-
+	void addNewPoseVectors(cv::Mat translationVector, cv::Mat rotationVector);	
 	void calculatePosition();
+
+	// getters
+	std::vector<Coordinates> getPositionVectors() { return pastRelPosVects; };
+	std::vector<Coordinates> getFilteredPosVectors() { return filteredPastRelPosVects; };
 
 private:
 
-	struct Coordinates
-	{
-		double x;
-		double y;
-		double Sum;
-	};
-	cv::Mat trVec;
-	cv::Mat rotVec;
+	/* PRIVATE VARIABLES */
+
+	double frameTime; // ellapsed time between two frame in the camera
+	cv::Mat trVec; // translation vector calculated by the video decoder
+	cv::Mat rotVec; // rotation vector calculated by the video decoder
+	
+	// relative position and rotation to the marker
+	Coordinates relVel; 
+	Coordinates relPos;
+
+	// last relative pose vectors to the marker
 	std::vector<Coordinates> pastTranslateVects;
 	std::vector<Coordinates> pastRelPosVects;
 	
-	Coordinates translateVectOrig;
+	
+	Coordinates translateVectOrig; // original translate vector --> this will give the origin
 
+	// for Kalman-filter
 	cv::KalmanFilter KF;
 	cv::Mat_<float> measurement;
 	std::vector<cv::Point> kalmanv;
 	std::vector<Coordinates> filteredPastRelPosVects;
+	Coordinates filteredRelPos;
 
+	/* PRIVATE METHODS */
 
-	void showGraph();
+	void initKalmanFilter();
+	
+	void calcRelPosRelVel();
+
+	void updateWithKalmanFilter();
+
 
 };
 

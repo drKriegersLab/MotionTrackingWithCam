@@ -25,9 +25,10 @@ int main()
 	float calibrationSquareDimension = 0.02f;
 	Mat r, t;
 
+
 	VideoDecoder decoder = VideoDecoder(chessBoardIntersections, calibrationSquareDimension);
-	Visualization visualization = Visualization("display");
-	PositionEstimator estimator = PositionEstimator();
+	Visualization visualization = Visualization();
+	PositionEstimator estimator = PositionEstimator(20);
 
 	bool isPicValid = false;
 	bool isFrameValid = false;
@@ -52,6 +53,9 @@ int main()
 				estimator.addNewPoseVectors(t, r);
 				estimator.calculatePosition();
 
+				visualization.showGraph(estimator.getPositionVectors(), estimator.getFilteredPosVectors());
+
+
 			}
 
 			else {
@@ -59,7 +63,7 @@ int main()
 			}			
 			
 			/* visalization */
-			visualization.addFrame(decoder.getFrame());
+			visualization.addFrameToGraphWindow(decoder.getFrame());
 			visualization.dispFrame();			
 
 		}		

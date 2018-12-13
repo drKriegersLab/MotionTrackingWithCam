@@ -8,12 +8,22 @@
 using namespace std;
 using namespace cv;
 
-PositionEstimator::PositionEstimator()
+PositionEstimator::PositionEstimator(int cameraFramePerSec) {
+	
+	frameTime = 1 / (double)cameraFramePerSec;
+
+	initKalmanFilter();		
+}
+
+PositionEstimator::~PositionEstimator()
 {
+}
+
+/* Method for setting the Kalman-filter up */
+void PositionEstimator::initKalmanFilter() {
 	KF = KalmanFilter(4, 2, 0);
 	KF.transitionMatrix = (Mat_<float>(4, 4) << 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1);
-	//Mat_<float> measurement_(2, 1);
-	//measurement = measurement_;
+	
 	measurement.create(2, 1);
 	measurement.setTo(Scalar(0));
 
@@ -27,39 +37,36 @@ PositionEstimator::PositionEstimator()
 	setIdentity(KF.measurementNoiseCov, Scalar::all(10));
 	setIdentity(KF.errorCovPost, Scalar::all(.1));
 	kalmanv.clear();
-	
-	
+
 }
 
-
-PositionEstimator::~PositionEstimator()
-{
-}
-
+/* Method for updating the pose vectors */
 void PositionEstimator::addNewPoseVectors(Mat translationVector, Mat rotationVector) {
 	trVec = translationVector;
 	rotVec = rotationVector;
 }
 
+/* Method for managing the position calculation */
 void PositionEstimator::calculatePosition() {
-	
-	double camFps = 50;
-	double frameTime = 1 / camFps;
-	Coordinates relVel;
-	Coordinates relPos;
+
+	calcRelPosRelVel();
+	updateWithKalmanFilter();
+
+}
+
+
+/* Method for calculating the relative position to the marker */
+void PositionEstimator::calcRelPosRelVel() {
 	Coordinates relPosLast;
-	Coordinates posCurr;
 	Coordinates translateVectCurr;
-	Coordinates filteredRelPos;
 
-	vector<Coordinates> diffVect;
 
-	// convert to vehicle coordinate sys
-	translateVectCurr.x = trVec.at<double>(2, 0);
+	// convert from the camera coordinate system to the vehicle coordinate system and store the new values
+	translateVectCurr.x = -trVec.at<double>(2, 0);
 	translateVectCurr.y = trVec.at<double>(0, 0);
-	
-	pastTranslateVects.push_back(translateVectCurr);	
+	pastTranslateVects.push_back(translateVectCurr);
 
+	// if there are enough captured data --> calculate the relative position and velocity
 	if (pastTranslateVects.size() > 2) {
 
 		relPos.x = translateVectCurr.x - translateVectOrig.x;
@@ -79,83 +86,40 @@ void PositionEstimator::calculatePosition() {
 		//cout << " | v " << relVel.Sum;
 		//cout << " vx: " << relVel.x;
 		//cout << " vy: " << relVel.y << endl;
-
-		
-		Mat prediction = KF.predict();
-		Point predictPoint(prediction.at<float>(0), prediction.at<float>(1));
-
-		// measure
-		measurement(0) = relPos.x;
-		measurement(1) = relPos.y;
-
-		// update
-		Mat estimated = KF.correct(measurement);
-
-		Point statePoint(estimated.at<float>(0), estimated.at<float>(1));
-		filteredRelPos.x = estimated.at<float>(0);
-		filteredRelPos.y = estimated.at<float>(1);
-		filteredRelPos.Sum = sqrt(filteredRelPos.x * filteredRelPos.x + filteredRelPos.y * filteredRelPos.y);
-		filteredPastRelPosVects.push_back(filteredRelPos);
-
-		cout << " x: " << filteredRelPos.x;
-		cout << " y: " << filteredRelPos.y << endl;
-
-		showGraph();
-
 	}
-	else {
+	else { 
+		// if we not caputred enough data --> store the current one as origin + set the relative position to zero 
+		// this will be the origin of the coordinate system
 		translateVectOrig.x = translateVectCurr.x;
 		translateVectOrig.y = translateVectCurr.y;
 
 		relPos.x = 0;
 		relPos.y = 0;
-		relPos.Sum = 0;		
+		relPos.Sum = 0;
 	}
+
 	pastRelPosVects.push_back(relPos);
-
-
 }
 
-void PositionEstimator::showGraph() {
-	int windowSizeX = 512;
-	int windowSizeY = 512;
-	int scale = 500;
-	int posX, posY, posXbefore, posYbefore;
 
-	namedWindow("graph");
-	vector<Coordinates> posDiff;
-	Mat img = Mat::zeros(windowSizeX, windowSizeY, CV_8UC3);
+void PositionEstimator::updateWithKalmanFilter() {
+	Mat prediction = KF.predict();
+	Point predictPoint(prediction.at<float>(0), prediction.at<float>(1));
 
+	// measure
+	measurement(0) = relPos.x;
+	measurement(1) = relPos.y;
 
-	for (int cycVec = 1; cycVec < pastRelPosVects.size(); cycVec++)
-	{
-		posX = (int)(double(windowSizeX) / 2 - (pastRelPosVects[cycVec - 1].y * scale));
-		posY = windowSizeY - (int)(pastRelPosVects[cycVec - 1].x * scale);
+	// update
+	Mat estimated = KF.correct(measurement);
 
-		posXbefore = (int)(double(windowSizeX) / 2 - (pastRelPosVects[cycVec].y * scale));
-		posYbefore = windowSizeY - (int)(pastRelPosVects[cycVec].x * scale);
-		line(img, Point(posX, posY), Point(posXbefore, posYbefore), Scalar(255, 0, 0), 2);
-	}	
+	Point statePoint(estimated.at<float>(0), estimated.at<float>(1));
+	filteredRelPos.x = estimated.at<float>(0);
+	filteredRelPos.y = estimated.at<float>(1);
+	filteredRelPos.Sum = sqrt(filteredRelPos.x * filteredRelPos.x + filteredRelPos.y * filteredRelPos.y);
+	filteredPastRelPosVects.push_back(filteredRelPos);
 
-	for (int cycVec = 1; cycVec < filteredPastRelPosVects.size(); cycVec++)
-	{
-		posX = (int)(double(windowSizeX) / 2 - (filteredPastRelPosVects[cycVec - 1].y * scale));
-		posY = windowSizeY - (int)(filteredPastRelPosVects[cycVec - 1].x * scale);
-
-		posXbefore = (int)(double(windowSizeX) / 2 - (filteredPastRelPosVects[cycVec].y * scale));
-		posYbefore = windowSizeY - (int)(filteredPastRelPosVects[cycVec].x * scale);
-		line(img, Point(posX, posY), Point(posXbefore, posYbefore), Scalar(0, 0, 255), 2);
-	}
-
-	
-	/*
-	cout << " posX: " << posX;
-	cout << " posY: " << posY;
-	cout << " posXbefore: " << posXbefore;
-	cout << " posYbefore: " << posYbefore;
-	*/
-	//cout << " vx: " << relVel.x;
-	//cout << " vy: " << relVel.y << endl;
-
-	imshow("graph", img);
+	cout << " x: " << filteredRelPos.x;
+	cout << " y: " << filteredRelPos.y << endl;
 }
+
