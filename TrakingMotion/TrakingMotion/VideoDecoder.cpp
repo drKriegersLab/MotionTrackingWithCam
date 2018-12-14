@@ -19,7 +19,8 @@ VideoDecoder::VideoDecoder(Size chessboardIntersections, float chessboardSqueare
 {
 	Mat rVec = Mat::zeros(3, 1, CV_64FC1);
 	Mat tVec = Mat::zeros(3, 1, CV_64FC1);
-	capture = new VideoCapture(1);
+	//capture = new VideoCapture(1);
+	capture = new VideoCapture("c:\\__DATA__\\00_PetProjects\\MovingDetection\\MVI_7624.MP4");
 
 	chessboardDimensions = chessboardIntersections;
 	calibrationSquareDimension = chessboardSqueareDimension;
@@ -36,7 +37,7 @@ VideoDecoder::~VideoDecoder()
 /* Method for building the camera and disance coeff matrices */
 void VideoDecoder::buildCamCalibMatrices() {
 	camMatrix = Mat(3, 3, CV_64F);
-
+	/*
 	camMatrix.at<double>(0, 0) = 1601.3;
 	camMatrix.at<double>(0, 1) = 0;
 	camMatrix.at<double>(0, 2) = -9.00041;
@@ -60,7 +61,30 @@ void VideoDecoder::buildCamCalibMatrices() {
 	distCoefMatrix.at<double>(5, 0) = 0;
 	distCoefMatrix.at<double>(6, 0) = 0;
 	distCoefMatrix.at<double>(7, 0) = 0;
+	*/
+	camMatrix.at<double>(0, 0) = 2430.75;
+	camMatrix.at<double>(0, 1) = 0;
+	camMatrix.at<double>(0, 2) = 81.932;
 
+	camMatrix.at<double>(1, 0) = 0;
+	camMatrix.at<double>(1, 1) = 2396.53;
+	camMatrix.at<double>(1, 2) = 29.96;
+
+	camMatrix.at<double>(2, 0) = 0;
+	camMatrix.at<double>(2, 1) = 0;
+	camMatrix.at<double>(2, 2) = 1;
+
+	distCoefMatrix = Mat(8, 1, CV_64F);
+
+	distCoefMatrix.at<double>(0, 0) = -0.107498;
+	distCoefMatrix.at<double>(1, 0) = -1.03746;
+	distCoefMatrix.at<double>(2, 0) = 0.0188312;
+	distCoefMatrix.at<double>(3, 0) = 0.00015936;
+
+	distCoefMatrix.at<double>(4, 0) = 1.6724;
+	distCoefMatrix.at<double>(5, 0) = 0;
+	distCoefMatrix.at<double>(6, 0) = 0;
+	distCoefMatrix.at<double>(7, 0) = 0;
 }
 
 /* Method for calculating the coordinates of the real chessboard */
@@ -94,6 +118,8 @@ bool VideoDecoder::decodeFrame() {
 
 	if (!capturedFrame.empty())
 	{
+		//capturedFrame.resize(Size(640, 360));
+		//resize(capturedFrame, capturedFrame, Size(640, 360));
 		cvtColor(capturedFrame, grayFrame, CV_BGR2GRAY);
 		foundChessboard = findChessboardCorners(grayFrame, chessboardDimensions, foundPoints, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE);
 

@@ -2,6 +2,7 @@
 #include "Visualization.h"
 #include "opencv2/core.hpp"
 #include "opencv2/highgui.hpp"
+#include "opencv2/videoio.hpp"
 #include "PositionEstimator.h"
 #include <iostream>
 
@@ -11,14 +12,22 @@ using namespace cv;
 
 Visualization::Visualization()
 {	
+	writeActive = true;
+
 	initCamWindow();
-	initGraph();	
+	initGraph();
+	if (writeActive) {	
+		int codec = VideoWriter::fourcc('M', 'J', 'P', 'G');
+		videoWriter = VideoWriter("output.avi", codec, 50, Size(640, 480));
+	}
 
 }
 
 
 Visualization::~Visualization()
-{
+{	
+	videoWriter.release();
+	//delete this;
 }
 
 /* Initialization of the camera's window */
@@ -39,7 +48,7 @@ void Visualization::initGraph() {
 
 	graphWindowSizeX = 500;
 	graphWindowSizeY = 500;
-	scale = 100; // 1 [m] is 100 px;
+	scale = 200; // 1 [m] is x px;
 	realPosColor = Scalar(255, 0, 0);
 	filteredPosColor = Scalar(0, 0, 255);
 	lineWidth = 2;
@@ -57,7 +66,7 @@ void Visualization::initGraph() {
 
 	// set grid
 	Scalar gridColor = Scalar(125, 125, 125);
-	for (int y = 0; y < graphWindowSizeY; y += scale) {
+	for (int y = graphWindowSizeY; y > 0; y -= scale) {
 		line(graphFrame, Point(0, y), Point(graphWindowSizeX, y), gridColor, 2);
 	}
 
@@ -69,6 +78,10 @@ void Visualization::initGraph() {
 	}
 
 	imshow("graph", graphFrame);
+
+	if (writeActive) {
+		videoWriter.write(graphFrame);
+	}
 }
 
 

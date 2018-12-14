@@ -33,7 +33,7 @@ void PositionEstimator::initKalmanFilter() {
 	KF.statePre.at<float>(3) = 0.0;
 
 	setIdentity(KF.measurementMatrix);
-	setIdentity(KF.processNoiseCov, Scalar::all(1e-4));
+	setIdentity(KF.processNoiseCov, Scalar::all(1e-2));
 	setIdentity(KF.measurementNoiseCov, Scalar::all(10));
 	setIdentity(KF.errorCovPost, Scalar::all(.1));
 	kalmanv.clear();
