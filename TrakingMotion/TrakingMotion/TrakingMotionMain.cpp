@@ -33,7 +33,7 @@ int main()
 	Mat r, t;
 	
 	VideoDecoder decoder = VideoDecoder(calibPath, chessBoardIntersections, calibrationSquareDimension, videoPath);
-	Visualization visualization = Visualization(outputVideoPath, decoder.getVidCaptureObject());
+	Visualization visualization = Visualization(outputVideoPath, decoder.getVidCaptureObject(), true);
 	PositionEstimator estimator = PositionEstimator(20);
 	
 	bool isPicValid = false;
@@ -44,7 +44,8 @@ int main()
 
 	for (int cycFrame = 0; cycFrame < frames.size(); cycFrame++)
 	{
-		if (decoder.decodeGivenFrame(frames[cycFrame]))
+		bool valid = decoder.decodeGivenFrame(frames[cycFrame]);
+		if (valid)
 		{
 			cout << "decoded frame: " << cycFrame << endl;
 			r = decoder.getRotVec();
@@ -56,18 +57,19 @@ int main()
 			estimator.addNewPoseVectors(t, r);
 			estimator.calculatePosition();
 
-			visualization.showGraph(estimator.getPositionVectors(), estimator.getFilteredPosVectors());
+			visualization.updateGraph(estimator.getPositionVectors(), estimator.getFilteredPosVectors());
 		}
 		cout << "not decoded frame: " << cycFrame << endl;
 
 		visualization.addFrameToGraphWindow(decoder.getFrame());
-		visualization.dispFrame();
+		visualization.dispFrame(cycFrame, valid);
 
 		int keyboard = waitKey(1);
 		if (keyboard == 'q' || keyboard == 27)
 			break;
 
 	}
+	
 	
 	cout << "no more frames" << endl;
 	/*
