@@ -20,18 +20,57 @@ using namespace cv;
 int main()
 {
 
+	//string calibPath = "c:\\__DATA__\\00_PetProjects\\MovingDetection\\MotionTrackingWithCam\\calib\\calib\\canon_cam_calib_pars.txt";
+	//string calibPath = "c:\\__DATA__\\00_PetProjects\\MovingDetection\\MotionTrackingWithCam\\calib\\calib\\canon_cam_calib_pars_vga.txt";
+	string calibPath = "c:\\__DATA__\\00_PetProjects\\MovingDetection\\MotionTrackingWithCam\\calib\\calib\\canon_cam_calib_pars_vga_3x3.txt";
+	//Size chessBoardIntersections = Size(7, 7);
+	Size chessBoardIntersections = Size(3, 3);
+	//float calibrationSquareDimension = 0.02f;
+	float calibrationSquareDimension = 0.046f;
+	string videoPath = "c:\\__DATA__\\00_PetProjects\\MovingDetection\\MVI_7637.MP4";
+	string outputVideoPath = "c:\\__DATA__\\00_PetProjects\\MovingDetection\\output.MP4";
 
-	Size chessBoardIntersections = Size(7, 7);
-	float calibrationSquareDimension = 0.02f;
 	Mat r, t;
-
-
-	VideoDecoder decoder = VideoDecoder(chessBoardIntersections, calibrationSquareDimension);
-	Visualization visualization = Visualization();
+	
+	VideoDecoder decoder = VideoDecoder(calibPath, chessBoardIntersections, calibrationSquareDimension, videoPath);
+	Visualization visualization = Visualization(outputVideoPath, decoder.getVidCaptureObject());
 	PositionEstimator estimator = PositionEstimator(20);
-
+	
 	bool isPicValid = false;
 	bool isFrameValid = false;
+	
+	decoder.readAllFrames();
+	vector<Mat> frames = decoder.getcapturedFrames();
+
+	for (int cycFrame = 0; cycFrame < frames.size(); cycFrame++)
+	{
+		if (decoder.decodeGivenFrame(frames[cycFrame]))
+		{
+			cout << "decoded frame: " << cycFrame << endl;
+			r = decoder.getRotVec();
+			t = decoder.getTrVec();
+
+			//cout << "tr: " << t.at<double>(0, 0) << ", " << t.at<double>(1, 0) << ", " << t.at<double>(2, 0) << endl;
+			//cout << "rt: " << r.at<double>(0, 0) << ", " << r.at<double>(1, 0) << ", " << r.at<double>(2, 0) << endl;
+
+			estimator.addNewPoseVectors(t, r);
+			estimator.calculatePosition();
+
+			visualization.showGraph(estimator.getPositionVectors(), estimator.getFilteredPosVectors());
+		}
+		cout << "not decoded frame: " << cycFrame << endl;
+
+		visualization.addFrameToGraphWindow(decoder.getFrame());
+		visualization.dispFrame();
+
+		int keyboard = waitKey(1);
+		if (keyboard == 'q' || keyboard == 27)
+			break;
+
+	}
+	
+	cout << "no more frames" << endl;
+	/*
 
 	while (true) {
 		
@@ -39,7 +78,7 @@ int main()
 
 		if (isFrameValid) {
 
-			/* decoding frame */
+			// decoding frame 
 			isPicValid = decoder.decodeFrame();
 
 			if (isPicValid) {
@@ -62,9 +101,15 @@ int main()
 				cout << "frame is not valid" << endl;
 			}			
 			
-			/* visalization */
+			// visalization 
 			visualization.addFrameToGraphWindow(decoder.getFrame());
 			visualization.dispFrame();			
+
+			int keyboard = waitKey(1);
+			if (keyboard == 'q' || keyboard == 27)
+				break;
+
+
 
 		}		
 		else {
@@ -72,8 +117,9 @@ int main()
 			break;
 		}	
 	}
-
-	//~visualization();
+	*/
+	decoder.release();
+	visualization.release();
 	return 0;
 
 }

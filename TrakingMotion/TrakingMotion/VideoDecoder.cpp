@@ -5,7 +5,9 @@
 #include "opencv2/calib3d.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui.hpp"
-
+#include <iostream>
+#include <fstream>
+#include <assert.h>
 using namespace std;
 using namespace cv;
 
@@ -15,17 +17,17 @@ using namespace cv;
 *	- Size - the size of intersections' corrdinate system
 *	- float - measured width of a chessboard square
 */
-VideoDecoder::VideoDecoder(Size chessboardIntersections, float chessboardSqueareDimension)
+VideoDecoder::VideoDecoder(string pathToCalibResult, Size chessboardIntersections, float chessboardSqueareDimension, string pathToVideoFile)
 {
 	Mat rVec = Mat::zeros(3, 1, CV_64FC1);
 	Mat tVec = Mat::zeros(3, 1, CV_64FC1);
 	//capture = new VideoCapture(1);
-	capture = new VideoCapture("c:\\__DATA__\\00_PetProjects\\MovingDetection\\MVI_7624.MP4");
+	capture = new VideoCapture(pathToVideoFile);
 
 	chessboardDimensions = chessboardIntersections;
 	calibrationSquareDimension = chessboardSqueareDimension;
 
-	buildCamCalibMatrices();
+	buildCamCalibMatrices(pathToCalibResult);
 	createKnownChessboardPoints();
 }
 
@@ -34,57 +36,45 @@ VideoDecoder::~VideoDecoder()
 {
 }
 
-/* Method for building the camera and disance coeff matrices */
-void VideoDecoder::buildCamCalibMatrices() {
+/* Method for building the camera and disance coeff matrices from given file, where the calibration parametrer has been stored by the calib app */
+void VideoDecoder::buildCamCalibMatrices(string calibResultsPath) {
+	
+	ifstream inputStream(calibResultsPath);
+	string line;
+	vector<string> lines;
+
+	// open - load - close
+	while (getline(inputStream, line)){
+		lines.push_back(line);
+	}
+	inputStream.close();
+
+	//3x3 + 5 parameter
+	assert(lines.size() == 14  && "there is no enough parameter in the calibration file" );
+
+	int lineNum = 0;
+
+	// build up the matrices and show them on the console
+	cout << "camera matrix:" << endl;
 	camMatrix = Mat(3, 3, CV_64F);
-	/*
-	camMatrix.at<double>(0, 0) = 1601.3;
-	camMatrix.at<double>(0, 1) = 0;
-	camMatrix.at<double>(0, 2) = -9.00041;
+	for (int rowNum = 0; rowNum < camMatrix.rows; rowNum++) {
+		for (int colNum = 0; colNum < camMatrix.cols; colNum++) {
+			camMatrix.at<double>(rowNum, colNum) = stod(lines[lineNum]);			
+			lineNum++;
 
-	camMatrix.at<double>(1, 0) = 0;
-	camMatrix.at<double>(1, 1) = 2724.92;
-	camMatrix.at<double>(1, 2) = 8.27411;
+			cout << "  " << camMatrix.at<double>(rowNum, colNum);
+		}
+		cout << endl;
+	}
+	
+	cout << "distance coefficients: " << endl;
+	distCoefMatrix = Mat(5, 1, CV_64F);
+	for (int rowNum = 0; rowNum < distCoefMatrix.rows; rowNum++) {
+		distCoefMatrix.at<double>(rowNum, 0) = stod(lines[lineNum]);
+		lineNum++;
 
-	camMatrix.at<double>(2, 0) = 0;
-	camMatrix.at<double>(2, 1) = 0;
-	camMatrix.at<double>(2, 2) = 1;
-
-	distCoefMatrix = Mat(8, 1, CV_64F);
-
-	distCoefMatrix.at<double>(0, 0) = -0.321751;
-	distCoefMatrix.at<double>(1, 0) = 4.55161;
-	distCoefMatrix.at<double>(2, 0) = -0.0737929;
-	distCoefMatrix.at<double>(3, 0) = -0.170011f;
-
-	distCoefMatrix.at<double>(4, 0) = -9.47005;
-	distCoefMatrix.at<double>(5, 0) = 0;
-	distCoefMatrix.at<double>(6, 0) = 0;
-	distCoefMatrix.at<double>(7, 0) = 0;
-	*/
-	camMatrix.at<double>(0, 0) = 2430.75;
-	camMatrix.at<double>(0, 1) = 0;
-	camMatrix.at<double>(0, 2) = 81.932;
-
-	camMatrix.at<double>(1, 0) = 0;
-	camMatrix.at<double>(1, 1) = 2396.53;
-	camMatrix.at<double>(1, 2) = 29.96;
-
-	camMatrix.at<double>(2, 0) = 0;
-	camMatrix.at<double>(2, 1) = 0;
-	camMatrix.at<double>(2, 2) = 1;
-
-	distCoefMatrix = Mat(8, 1, CV_64F);
-
-	distCoefMatrix.at<double>(0, 0) = -0.107498;
-	distCoefMatrix.at<double>(1, 0) = -1.03746;
-	distCoefMatrix.at<double>(2, 0) = 0.0188312;
-	distCoefMatrix.at<double>(3, 0) = 0.00015936;
-
-	distCoefMatrix.at<double>(4, 0) = 1.6724;
-	distCoefMatrix.at<double>(5, 0) = 0;
-	distCoefMatrix.at<double>(6, 0) = 0;
-	distCoefMatrix.at<double>(7, 0) = 0;
+		cout << "  " << distCoefMatrix.at<double>(rowNum, 0) << endl;
+	}
 }
 
 /* Method for calculating the coordinates of the real chessboard */
@@ -117,11 +107,9 @@ bool VideoDecoder::decodeFrame() {
 	vector<Point2f> foundPoints;
 
 	if (!capturedFrame.empty())
-	{
-		//capturedFrame.resize(Size(640, 360));
-		//resize(capturedFrame, capturedFrame, Size(640, 360));
+	{		
 		cvtColor(capturedFrame, grayFrame, CV_BGR2GRAY);
-		foundChessboard = findChessboardCorners(grayFrame, chessboardDimensions, foundPoints, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE);
+		foundChessboard = findChessboardCorners(capturedFrame, chessboardDimensions, foundPoints, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE);
 
 		if (foundChessboard) {
 			/* for drawing
@@ -135,8 +123,35 @@ bool VideoDecoder::decodeFrame() {
 			rVec = Mat::zeros(3, 1, CV_64FC1);
 			tVec = Mat::zeros(3, 1, CV_64FC1);
 			solvePnPRansac(modelPoints, foundPoints, camMatrix, distCoefMatrix, rVec, tVec);
+			//solvePnP(modelPoints, foundPoints, camMatrix, distCoefMatrix, rVec, tVec);
 		}
 	}
 		
 	return foundChessboard;
+}
+
+void VideoDecoder::release() {
+	capture->release();
+}
+
+
+void VideoDecoder::readAllFrames() {
+
+	while (true) {
+		Mat frame;
+		if (!capture->read(frame))
+			break;
+		if (frame.empty())
+			break;
+
+		capturedFrames.push_back(frame);
+		waitKey(1);
+		cout << "captured frames: " << capturedFrames.size() << endl;
+	}
+}
+
+bool VideoDecoder::decodeGivenFrame(Mat frame) {
+	capturedFrame = frame;
+
+	return decodeFrame();
 }

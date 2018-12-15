@@ -7,13 +7,14 @@ class Visualization
 {
 public:
 	/* PUBLIC METHODS */
-	Visualization();
+	Visualization(std::string outputPath, cv::VideoCapture* inputVideo);
 	~Visualization();
 	void DisposeObject() { delete this; }
 
 	void showGraph(std::vector<Coordinates> relativePositions, std::vector<Coordinates> filteredPositions); // graph visualization
 	void addFrameToGraphWindow(cv::Mat newGraphFrame); // add captured picture
 	void dispFrame(); // show captured picture
+	void release();
 
 private:
 	/* PRIVATE VARIABLES */
@@ -25,8 +26,8 @@ private:
 
 	/* for graph displaying */
 	// size the graph window in pixels
-	int graphWindowSizeX; 
-	int graphWindowSizeY;
+	int graphWindowSizeHeight; 
+	int graphWindowSizeWidth;
 	int scale; // scaling factor --> multiply the coordinates with it to a better picture
 
 	cv::Mat graphFrame; // canvas of the graph

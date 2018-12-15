@@ -10,24 +10,35 @@ using namespace std;
 using namespace cv;
 
 
-Visualization::Visualization()
+Visualization::Visualization(string outputPath, VideoCapture* inputVideo)
 {	
-	writeActive = true;
+	graphWindowSizeHeight = 640;
+	graphWindowSizeWidth = 640;
 
+	writeActive = true;
+	//videoWriter = new VideoWriter(outputPath, inputVideoForucc, 50, Size(640, 480));
 	initCamWindow();
-	initGraph();
+	
 	if (writeActive) {	
-		int codec = VideoWriter::fourcc('M', 'J', 'P', 'G');
-		videoWriter = VideoWriter("output.avi", codec, 50, Size(640, 480));
+		int codec = inputVideo->get(CV_CAP_PROP_FOURCC);
+		int fps = inputVideo->get(CV_CAP_PROP_FPS);
+
+		videoWriter.open(outputPath, codec, fps, Size(graphWindowSizeHeight, graphWindowSizeWidth));
+		
 	}
 
+	initGraph();
 }
 
 
 Visualization::~Visualization()
 {	
-	videoWriter.release();
+	//videoWriter.release();
 	//delete this;
+}
+
+void Visualization::release() {
+	videoWriter.release();
 }
 
 /* Initialization of the camera's window */
@@ -46,15 +57,14 @@ void Visualization::initCamWindow() {
 */
 void Visualization::initGraph() {
 
-	graphWindowSizeX = 500;
-	graphWindowSizeY = 500;
+	
 	scale = 200; // 1 [m] is x px;
 	realPosColor = Scalar(255, 0, 0);
 	filteredPosColor = Scalar(0, 0, 255);
 	lineWidth = 2;
 
 	namedWindow("graph");
-	graphFrame = Mat::zeros(graphWindowSizeX, graphWindowSizeY, CV_8UC3);
+	graphFrame = Mat::zeros(graphWindowSizeWidth, graphWindowSizeHeight, CV_8UC3);
 
 	// set background
 	Vec3b color = Vec3b(255, 255, 255);
@@ -65,21 +75,21 @@ void Visualization::initGraph() {
 	}
 
 	// set grid
-	Scalar gridColor = Scalar(125, 125, 125);
-	for (int y = graphWindowSizeY; y > 0; y -= scale) {
-		line(graphFrame, Point(0, y), Point(graphWindowSizeX, y), gridColor, 2);
+	Scalar gridColor = Scalar(125, 125, 125);	
+	for (int y = graphWindowSizeHeight; y > 0; y -= scale) {
+		line(graphFrame, Point(0, y), Point(graphWindowSizeWidth, y), gridColor, 2); // horizontal lines
 	}
 
-	for (int x = (int)(graphWindowSizeX / 2); x > 0; x -= scale) {
-		line(graphFrame, Point(x, 0), Point(x, graphWindowSizeY), gridColor, 2);
+	for (int x = (int)(graphWindowSizeWidth / 2); x > 0; x -= scale) {
+		line(graphFrame, Point(x, 0), Point(x, graphWindowSizeHeight), gridColor, 2); // vertical lines in the negative half
 	}
-	for (int x = (int)(graphWindowSizeX / 2); x < graphWindowSizeX; x += scale) {
-		line(graphFrame, Point(x, 0), Point(x, graphWindowSizeY), gridColor, 2);
+	for (int x = (int)(graphWindowSizeWidth / 2); x < graphWindowSizeWidth; x += scale) {
+		line(graphFrame, Point(x, 0), Point(x, graphWindowSizeHeight), gridColor, 2); // vertical lines in the positive half
 	}
 
 	imshow("graph", graphFrame);
 
-	if (writeActive) {
+	if (writeActive) {		
 		videoWriter.write(graphFrame);
 	}
 }
@@ -106,25 +116,32 @@ void Visualization::showGraph(std::vector<Coordinates> relativePositions, std::v
 	if (relativePositions.size() > 2) {
 
 		// create and draw the last chagne of the measured line
-		posX = (int)(double(graphWindowSizeX) / 2 - (relativePositions[relativePositions.size() - 2].y * scale));
-		posY = graphWindowSizeY - (int)(relativePositions[relativePositions.size() - 2].x * scale);
+		
+		// current pos
+		posX = (int)(double(graphWindowSizeWidth) / 2 - (relativePositions[relativePositions.size() - 1].y * scale));
+		posY = graphWindowSizeHeight - (int)(relativePositions[relativePositions.size() - 1].x * scale);
+		/*
+		// last pos
+		posXbefore = (int)(double(graphWindowSizeWidth) / 2 - (relativePositions[relativePositions.size() - 2].y * scale));
+		posYbefore = graphWindowSizeHeight - (int)(relativePositions[relativePositions.size() - 2].x * scale);
+		*/
 
-		posXbefore = (int)(double(graphWindowSizeX) / 2 - (relativePositions[relativePositions.size() - 1].y * scale));
-		posYbefore = graphWindowSizeY - (int)(relativePositions[relativePositions.size() - 1].x * scale);
-
-		line(graphFrame, Point(posX, posY), Point(posXbefore, posYbefore), realPosColor, lineWidth);
+		putText(graphFrame, "x", Point2f(posX, posY), FONT_HERSHEY_PLAIN, 1, realPosColor, 1);
+		//line(graphFrame, Point(posX, posY), Point(posXbefore, posYbefore), realPosColor, lineWidth);
 
 		// create and draw the last change of the filtered line
-		posX = (int)(double(graphWindowSizeX) / 2 - (filteredPositions[relativePositions.size() - 2].y * scale));
-		posY = graphWindowSizeY - (int)(filteredPositions[relativePositions.size() - 2].x * scale);
+		posX = (int)(double(graphWindowSizeWidth) / 2 - (filteredPositions[relativePositions.size() - 1].y * scale));
+		posY = graphWindowSizeHeight - (int)(filteredPositions[relativePositions.size() - 1].x * scale);
 
-		posXbefore = (int)(double(graphWindowSizeX) / 2 - (filteredPositions[relativePositions.size() - 1].y * scale));
-		posYbefore = graphWindowSizeY - (int)(filteredPositions[relativePositions.size() - 1].x * scale);
-
+		posXbefore = (int)(double(graphWindowSizeWidth) / 2 - (filteredPositions[relativePositions.size() - 2].y * scale));
+		posYbefore = graphWindowSizeHeight - (int)(filteredPositions[relativePositions.size() - 2].x * scale);
 
 		line(graphFrame, Point(posX, posY), Point(posXbefore, posYbefore), filteredPosColor, lineWidth);
 	}
 
 	imshow("graph", graphFrame);
+	if (writeActive) {
+		videoWriter.write(graphFrame);
+	}
 	
 }

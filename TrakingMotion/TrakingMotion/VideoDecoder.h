@@ -8,7 +8,7 @@ class VideoDecoder
 {
 public:
 	/* PUBLIC METHODS */
-	VideoDecoder(cv::Size chessboardIntersections, float chessboardSqueareDimension);
+	VideoDecoder(std::string pathToCalibResult, cv::Size chessboardIntersections, float chessboardSqueareDimension, std::string pathToVideoFile);
 	~VideoDecoder();
 	
 	bool decodeFrame();
@@ -19,7 +19,19 @@ public:
 
 	cv::Mat getFrame() { return capturedFrame; };
 
+	std::vector<cv::Mat> getcapturedFrames() { return capturedFrames; };
+
+	cv::VideoCapture* getVidCaptureObject() { return capture; };
+
+	bool decodeGivenFrame(cv::Mat frame);
+
+	int getForucc() { return (int)capture->get(6); };
+
 	bool nextFrame();
+
+	void readAllFrames();
+
+	void release();
 
 private: 
 
@@ -27,6 +39,8 @@ private:
 	cv::VideoCapture* capture; // webcam's capturer
 	cv::Mat capturedFrame; // valid captured frame at the moment
 	cv::Mat grayFrame; // grayscale version of the valid captured frame
+
+	std::vector<cv::Mat> capturedFrames;
 
 	cv::Mat camMatrix; // const - a camera-specific matrix, which is given by the camera calibration.
 	cv::Mat distCoefMatrix; // const - a camera-specific matrix, which is given by the camera calibration.
@@ -40,7 +54,7 @@ private:
 	
 	/* PRIVATE METHODS */
 
-	void buildCamCalibMatrices();
+	void buildCamCalibMatrices(std::string calibResultsPath);
 
 	void createKnownChessboardPoints();
 };

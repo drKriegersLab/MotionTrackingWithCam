@@ -12,3 +12,11 @@ TrakingMotion/\.vs/
 TrakingMotion/x64/Debug/
 
 TrakingMotion/TrakingMotion/x64/Debug/
+
+calib/x64/
+
+*.avi
+
+TrakingMotion/TrakingMotion/mousetracking\.cpp
+
+TrakingMotion/TrakingMotion/mousetracking\.h

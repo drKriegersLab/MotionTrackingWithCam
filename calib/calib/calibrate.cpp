@@ -19,10 +19,13 @@ using namespace std;
 CameraCalibrator::CameraCalibrator(string outputFileName) {
 	outFilePath = outputFileName;
 
-	chessboardDimensions = Size(7, 7);
-	calibrationSquareDimension = 0.02f;
+	//chessboardDimensions = Size(7, 7);
+	chessboardDimensions = Size(3, 3);
+	//calibrationSquareDimension = 0.02f;
+	calibrationSquareDimension = 0.046f;
 
-	videoCapture = new VideoCapture(0);
+	//videoCapture = new VideoCapture(0);
+	videoCapture = new VideoCapture("c:\\__DATA__\\00_PetProjects\\MovingDetection\\calib_VGA_4x4.MP4");
 	cameraMatrix = Mat::eye(3, 3, CV_64F);		
 
 
@@ -84,6 +87,7 @@ bool CameraCalibrator::saveCameraCalibration() {
 		}
 
 		outStream.close();
+		cout << "calibration data saved" << endl;
 		return true;
 	}
 
@@ -91,50 +95,62 @@ bool CameraCalibrator::saveCameraCalibration() {
 }
 
 void CameraCalibrator::performCalibration() {
+	
+	int skip = 15;
+	int skipped = 0;
 	while (true)
 	{
 		if (!videoCapture->read(frame))
 		{
+			cout << "muhaha" << endl;
 			break;
 		}
-		bool found = false;
+		if (skipped < skip) {
+			skipped++;
+			//cout << "skipped" << endl;
+		}
+		else {
+			skipped = 0;
+			bool found = false;
 
-		found = findChessboardCorners(frame, chessboardDimensions, foundPoints, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE); // | CV_CALIB_CB_FAST_CHECK);
-		frame.copyTo(drawToFrame);
+			found = findChessboardCorners(frame, chessboardDimensions, foundPoints, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE); // | CV_CALIB_CB_FAST_CHECK);
+			frame.copyTo(drawToFrame);
 
-		drawChessboardCorners(drawToFrame, chessboardDimensions, foundPoints, found);
-		
-		if (found)
-		{
-			imshow("Webcam", drawToFrame);
-			savedImages.push_back(drawToFrame);
-			checkerboardImageSpacePoints.push_back(foundPoints);
-			cout << "found" << endl;
+			drawChessboardCorners(drawToFrame, chessboardDimensions, foundPoints, found);
 
-			cout << "saved images: " << savedImages.size() << endl;
-			if (checkerboardImageSpacePoints.size() > 25)
+			if (found)
 			{
-				worldSpaceCornerPoints.resize(checkerboardImageSpacePoints.size(), worldSpaceCornerPoints[0]);
-				vector<Point3f> oneReal = worldSpaceCornerPoints[0];
-				cout << "real corners cols: " << worldSpaceCornerPoints[0].size() << endl;
-				cout << "worldSpaceCornerPoints.size: " << worldSpaceCornerPoints.size() << endl;
-				vector<Mat> rVectors, tVectors;
-				distanceCoefficients = Mat::zeros(8, 1, CV_64F);
+				imshow("Webcam", drawToFrame);
+				savedImages.push_back(drawToFrame);
+				checkerboardImageSpacePoints.push_back(foundPoints);
+				cout << "found" << endl;
 
-				calibrateCamera(worldSpaceCornerPoints, checkerboardImageSpacePoints, chessboardDimensions, cameraMatrix, distanceCoefficients, rVectors, tVectors);
-				
-				saveCameraCalibration();
-				cout << "rVectors.size: " << rVectors.size() << endl;
-				cout << "tVectors.size: " << tVectors.size() << endl;
-				break;
+				cout << "saved images: " << savedImages.size() << endl;
+				if (checkerboardImageSpacePoints.size() > 27)
+				{
+					worldSpaceCornerPoints.resize(checkerboardImageSpacePoints.size(), worldSpaceCornerPoints[0]);
+					vector<Point3f> oneReal = worldSpaceCornerPoints[0];
+					cout << "real corners cols: " << worldSpaceCornerPoints[0].size() << endl;
+					cout << "worldSpaceCornerPoints.size: " << worldSpaceCornerPoints.size() << endl;
+					vector<Mat> rVectors, tVectors;
+					distanceCoefficients = Mat::zeros(8, 1, CV_64F);
+
+					calibrateCamera(worldSpaceCornerPoints, checkerboardImageSpacePoints, chessboardDimensions, cameraMatrix, distanceCoefficients, rVectors, tVectors);
+
+					saveCameraCalibration();
+					cout << "rVectors.size: " << rVectors.size() << endl;
+					cout << "tVectors.size: " << tVectors.size() << endl;
+					break;
+				}
+			}
+			else
+			{
+				imshow("Webcam", frame);
+				cout << "not found" << endl;
 			}
 		}
-		else
-		{
-			imshow("Webcam", frame);
-			cout << "not found" << endl;
-		}
-		char character = waitKey(1000 / 20);
+	
+		char character = waitKey(1);
 
 	}
 }
