@@ -74,18 +74,10 @@ void PositionEstimator::calcRelPosRelVel() {
 		relPos.Sum = sqrt(relPos.x * relPos.x + relPos.y *relPos.y);
 
 		relPosLast = pastRelPosVects.back();
-		cout << frameTime << endl;
+		
 		relVel.x = (relPos.x - relPosLast.x) / frameTime;
 		relVel.y = (relPos.y - relPosLast.y) / frameTime;
 		relVel.Sum = sqrt(relVel.x * relVel.x + relVel.y * relVel.y);
-
-
-		//cout << " r: " << relPos.Sum;
-		//cout << " rx: " << relPos.x;
-		//cout << " ry: " << relPos.y;
-		//cout << " | v " << relVel.Sum;
-		//cout << " vx: " << relVel.x;
-		//cout << " vy: " << relVel.y << endl;
 	}
 	else { 
 		// if we not caputred enough data --> store the current one as origin + set the relative position to zero 
@@ -119,7 +111,5 @@ void PositionEstimator::updateWithKalmanFilter() {
 	filteredRelPos.Sum = sqrt(filteredRelPos.x * filteredRelPos.x + filteredRelPos.y * filteredRelPos.y);
 	filteredPastRelPosVects.push_back(filteredRelPos);
 
-	cout << " x: " << filteredRelPos.x;
-	cout << " y: " << filteredRelPos.y << endl;
 }
 

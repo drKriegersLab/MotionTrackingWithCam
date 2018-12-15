@@ -47,19 +47,14 @@ int main()
 		bool valid = decoder.decodeGivenFrame(frames[cycFrame]);
 		if (valid)
 		{
-			cout << "decoded frame: " << cycFrame << endl;
 			r = decoder.getRotVec();
 			t = decoder.getTrVec();
-
-			//cout << "tr: " << t.at<double>(0, 0) << ", " << t.at<double>(1, 0) << ", " << t.at<double>(2, 0) << endl;
-			//cout << "rt: " << r.at<double>(0, 0) << ", " << r.at<double>(1, 0) << ", " << r.at<double>(2, 0) << endl;
 
 			estimator.addNewPoseVectors(t, r);
 			estimator.calculatePosition();
 
 			visualization.updateGraph(estimator.getPositionVectors(), estimator.getFilteredPosVectors());
 		}
-		cout << "not decoded frame: " << cycFrame << endl;
 
 		visualization.addFrameToGraphWindow(decoder.getFrame());
 		visualization.dispFrame(cycFrame, valid);

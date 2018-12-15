@@ -180,7 +180,6 @@ void Visualization::dispFrame(int numOfFrames, bool captured) {
 	imshow("summary", summaryFrame);
 
 	if (writeActive) {
-		cout << summaryFrame.size() << endl;
 		videoWriter.write(summaryFrame);
 	}
 }
