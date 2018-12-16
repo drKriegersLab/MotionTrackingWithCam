@@ -17,12 +17,18 @@ using namespace cv;
 *	- Size - the size of intersections' corrdinate system
 *	- float - measured width of a chessboard square
 */
-VideoDecoder::VideoDecoder(string pathToCalibResult, Size chessboardIntersections, float chessboardSqueareDimension, string pathToVideoFile)
-{
+VideoDecoder::VideoDecoder(bool readFromFile, string pathToCalibResult, Size chessboardIntersections, float chessboardSqueareDimension, string pathToVideoFile) {
 	Mat rVec = Mat::zeros(3, 1, CV_64FC1);
 	Mat tVec = Mat::zeros(3, 1, CV_64FC1);
-	//capture = new VideoCapture(1);
-	capture = new VideoCapture(pathToVideoFile);
+
+	if (readFromFile) {		
+		capture = new VideoCapture(pathToVideoFile);
+	}
+	else {
+		capture = new VideoCapture(1);
+	}
+
+	//assert(capture->isOpened() && "video file or webcam stream cannot be opened");
 
 	chessboardDimensions = chessboardIntersections;
 	calibrationSquareDimension = chessboardSqueareDimension;
@@ -106,10 +112,10 @@ bool VideoDecoder::decodeFrame() {
 	bool foundChessboard = false;
 	vector<Point2f> foundPoints;
 
-	if (!capturedFrame.empty())
-	{		
+	if (!capturedFrame.empty()) {		
 		cvtColor(capturedFrame, grayFrame, CV_BGR2GRAY);
 		foundChessboard = findChessboardCorners(capturedFrame, chessboardDimensions, foundPoints, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE);
+		//drawChessboardCorners(capturedFrame, chessboardDimensions, foundPoints, foundChessboard);
 
 		if (foundChessboard) {
 			/* for drawing

@@ -3,10 +3,15 @@
 #include "opencv2/core.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
+#include "opencv2/calib3d.hpp"
 #include <iostream>
+
+#define USING_RODRIGUES_FORMULA 0
 
 using namespace std;
 using namespace cv;
+
+
 
 PositionEstimator::PositionEstimator(int cameraFramePerSec) {
 	
@@ -59,19 +64,53 @@ void PositionEstimator::calculatePosition() {
 void PositionEstimator::calcRelPosRelVel() {
 	Coordinates relPosLast;
 	Coordinates translateVectCurr;
+	translateVectCurr.x = trVec.at<double>(2, 0);
+	translateVectCurr.y = -trVec.at<double>(0, 0);
 
+	#if USING_RODRIGUES_FORMULA
+	Mat rot;
 
-	// convert from the camera coordinate system to the vehicle coordinate system and store the new values
-	translateVectCurr.x = -trVec.at<double>(2, 0);
-	translateVectCurr.y = trVec.at<double>(0, 0);
-	pastTranslateVects.push_back(translateVectCurr);
+	if (pastRelPosVects.size() > 1) {
+		bool invalid = false;
+
+		double value1, value2;
+
+		for (int cycCol = 0; cycCol < pastRotVects[pastRotVects.size() - 1].cols; cycCol++) {
+			value1 = rotVec.at<double>(cycCol, 0);
+			value2 = pastRotVects[pastRotVects.size() - 1].at<double>(cycCol, 0);
+
+			if ((value1 - (-value2)) < 0.25) // (value - (-value)
+				invalid = true;
+		}
+		if (invalid) {
+			//cout << "corrected" << endl;
+			rotVec = pastRotVects[pastRotVects.size() - 1];
+		}
+	}
+	pastRotVects.push_back(rotVec);
+	
+	waitKey(5);
+	Rodrigues(rotVec, rot);
+
+	Mat camTr = -rot.t()*trVec;
+	Coordinates camPoseVectCurr;
+	camPoseVectCurr.x = camTr.at<double>(2, 0);
+	camPoseVectCurr.y = -camTr.at<double>(0, 0);
+
+	#endif // USING_RODRIGUEZ_FORMULA
 
 	// if there are enough captured data --> calculate the relative position and velocity
-	if (pastTranslateVects.size() > 2) {
+	if (pastRelPosVects.size() > 2) {
+		
+		// for rodriguez
+		#if USING_RODRIGUES_FORMULA
+		relPos.x = - translateVectOrig.x + translateVectCurr.x;
+		relPos.y = -translateVectOrig.y + translateVectCurr.y;		//relPos.y = - translateVectOrig.y - translateVectCurr.y;
+		#endif	
 
-		relPos.x = translateVectCurr.x - translateVectOrig.x;
-		relPos.y = translateVectCurr.y - translateVectOrig.y;
-		relPos.Sum = sqrt(relPos.x * relPos.x + relPos.y *relPos.y);
+		// delta between the original and the new position: original translate vector + (-current translate vector) <in the "vehicle" coordinate system>
+		relPos.x = translateVectOrig.x - translateVectCurr.x;
+		relPos.y = translateVectOrig.y - translateVectCurr.y;
 
 		relPosLast = pastRelPosVects.back();
 		
@@ -81,9 +120,14 @@ void PositionEstimator::calcRelPosRelVel() {
 	}
 	else { 
 		// if we not caputred enough data --> store the current one as origin + set the relative position to zero 
-		// this will be the origin of the coordinate system
+		// this will be the origin of the coordinate system				
 		translateVectOrig.x = translateVectCurr.x;
 		translateVectOrig.y = translateVectCurr.y;
+		
+		#if USING_RODRIGUES_FORMULA
+		camPoseOrig.x = camPoseVectCurr.x;
+		camPoseOrig.y = camPoseVectCurr.y;
+		#endif
 
 		relPos.x = 0;
 		relPos.y = 0;

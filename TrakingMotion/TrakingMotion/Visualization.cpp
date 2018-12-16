@@ -15,8 +15,7 @@ using namespace cv;
 *	- init video writer class
 *	- init graph
 */
-Visualization::Visualization(string outputPath, VideoCapture* inputVideo, bool writeVideo)
-{	
+Visualization::Visualization(string outputPath, VideoCapture* inputVideo, bool writeVideo) {	
 	// specifying each frame's dimensions
 	graphFrameSizeHeight = 640;
 	graphFrameSizeWidth = 640;
@@ -40,8 +39,7 @@ Visualization::Visualization(string outputPath, VideoCapture* inputVideo, bool w
 }
 
 
-Visualization::~Visualization()
-{	
+Visualization::~Visualization() {	
 	//videoWriter.release();
 	//delete this;
 }
@@ -61,7 +59,7 @@ void Visualization::release() {
 */
 void Visualization::initGraphFrame() {
 	
-	scale = 200; // 1 [m] is x px;
+	scale = 100; // 1 [m] is x px;
 	realPosColor = Scalar(255, 0, 0);
 	filteredPosColor = Scalar(0, 0, 255);
 	lineWidth = 2;	
@@ -90,10 +88,10 @@ void Visualization::initGraphFrame() {
 	}
 
 	// set axes
-	arrowedLine(graphFrame, Point(graphFrameSizeWidth / 2, graphFrameSizeHeight), Point(graphFrameSizeWidth / 2, 0), Scalar(0, 0, 0), lineWidth, 4, 0, 0.03);
-	arrowedLine(graphFrame, Point(graphFrameSizeWidth / 2, graphFrameSizeHeight), Point(graphFrameSizeWidth, graphFrameSizeHeight), Scalar(0, 0, 0), lineWidth, 8, 0, 0.03);
-	putText(graphFrame, "axis x", Point2f(graphFrameSizeWidth / 2 - 75, 15), FONT_ITALIC, 0.5, Scalar(0, 0, 0), 1);
-	putText(graphFrame, "axis y", Point2f(graphFrameSizeWidth - 75, graphFrameSizeHeight - 15), FONT_ITALIC, 0.5, Scalar(0, 0, 0), 1);
+	arrowedLine(graphFrame, Point(graphFrameSizeWidth / 2, graphFrameSizeHeight), Point(graphFrameSizeWidth / 2, 0), Scalar(0, 0, 0), lineWidth, 4, 0, 0.03); // x
+	arrowedLine(graphFrame, Point(graphFrameSizeWidth / 2, graphFrameSizeHeight), Point(0, graphFrameSizeHeight), Scalar(0, 0, 0), lineWidth, 8, 0, 0.03); // y
+	putText(graphFrame, "axis x", Point2f(graphFrameSizeWidth / 2 - 75, 15), FONT_ITALIC, 0.5, Scalar(0, 0, 0), 1); // x
+	putText(graphFrame, "axis y", Point2f(15, graphFrameSizeHeight - 15), FONT_ITALIC, 0.5, Scalar(0, 0, 0), 1); // y
 
 }
 

@@ -31,6 +31,7 @@ private:
 	double frameTime; // ellapsed time between two frame in the camera
 	cv::Mat trVec; // translation vector calculated by the video decoder
 	cv::Mat rotVec; // rotation vector calculated by the video decoder
+	std::vector<cv::Mat> pastRotVects;
 	
 	// relative position and rotation to the marker
 	Coordinates relVel; 
@@ -42,6 +43,7 @@ private:
 	
 	
 	Coordinates translateVectOrig; // original translate vector --> this will give the origin
+	Coordinates camPoseOrig;
 
 	// for Kalman-filter
 	cv::KalmanFilter KF;

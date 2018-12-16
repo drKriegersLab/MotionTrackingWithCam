@@ -8,7 +8,7 @@ class VideoDecoder
 {
 public:
 	/* PUBLIC METHODS */
-	VideoDecoder(std::string pathToCalibResult, cv::Size chessboardIntersections, float chessboardSqueareDimension, std::string pathToVideoFile);
+	VideoDecoder(bool readFromFile, std::string pathToCalibResult, cv::Size chessboardIntersections, float chessboardSqueareDimension, std::string pathToVideoFile);
 	~VideoDecoder();
 	
 	bool decodeFrame();
