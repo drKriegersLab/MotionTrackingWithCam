@@ -23,7 +23,7 @@ public:
 	*	-- store the positions of the intersections
 	*	-- call OpenCV's calibration, which will provide the translation and rotation matrices
 	*/
-	void performCalibration();
+	void performCalibration(int skip);
 
 	/*
 	* Destructor

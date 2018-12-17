@@ -28,6 +28,7 @@ int main(int argc, char* argv[])
 	string outputFile;
 	int interSectHor, interSectVer;
 	float calibrationSquareDimension;
+	int skipNum;
 
 	/* input parser */
 	const String keys =
@@ -37,7 +38,8 @@ int main(int argc, char* argv[])
 		"{output | output.txt | specifies the output parameterlist's file}"
 		"{intersectHor | 3 | horizontal intersection number of the chessboard marker}"
 		"{intersectVer | 3 | horizontal intersection number of the chessboard marker}"
-		"{squaredim | 0.046 | size of each square in the chessboard marker }";
+		"{squaredim | 0.046 | size of each square in the chessboard marker }"
+		"{skip | 15 | number of the frames, which will be skipped during the calibration }";
 	
 	CommandLineParser parser(argc, argv, keys);
 
@@ -45,10 +47,10 @@ int main(int argc, char* argv[])
 		cout << "possible arguments:" << endl;
 		parser.printMessage();
 		cout << endl << "This program creates the camera matrices, which are essential to further image processing" << endl;
-		cout << "What you need to do?" << endl;
+		cout << "What do you need to do?" << endl;
 		cout << "	- get a black and white chessboard as marker" << endl;
-		cout << "	- measure the width of the squares  --> it will be the squaredim"<< endl;
-		cout << "	- specify the number of intersections --> it will be the intersectHor and intersectVer" << endl;
+		cout << "	- measure the width of the squares  --> this will be the squaredim"<< endl;
+		cout << "	- specify the number of intersections --> this will be the intersectHor and intersectVer" << endl;
 		cout << "	- shoot a video from it or use your webcam (inputType)" << endl;
 		cout << "	- specify the output file (it will be a txt with camera matrix and distance coefficients" << endl;
 		return 1;
@@ -126,10 +128,21 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	// SKIP
+	if (parser.has("skip")) {
+		skipNum = parser.get<int>("skip");
+		cout << "[INPUT] skipped frames: " << skipNum << endl;
+	}
+	else {
+		cout << "[WRONG INPUT] skip number was not specified " << endl;
+		parser.printMessage();
+		return 1;
+	}
+
 	 /* main part */
 
 	CameraCalibrator cameraCalibrator(readFromFile, videoPath, outputFile, Size(interSectHor, interSectVer), calibrationSquareDimension);
-	cameraCalibrator.performCalibration();
+	cameraCalibrator.performCalibration(skipNum);
 
 	return 0;
     

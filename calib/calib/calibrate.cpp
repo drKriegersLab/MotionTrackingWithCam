@@ -32,8 +32,6 @@ CameraCalibrator::CameraCalibrator(bool readFromFile, string inputFileName, stri
 	}
 	cameraMatrix = Mat::eye(3, 3, CV_64F);		
 
-
-
 	createKnownBoardPositions();
 }
 
@@ -48,13 +46,12 @@ void CameraCalibrator::createKnownBoardPositions() {
 	{
 		for (int j = 0; j < chessboardDimensions.width; j++)
 		{
-			corners.push_back(Point3f(j*calibrationSquareDimension, i*calibrationSquareDimension, 0.0f));
-			cout << "num of corners: " << corners.size() << endl;
+			corners.push_back(Point3f(j*calibrationSquareDimension, i*calibrationSquareDimension, 0.0f));			
 		}
 	}
-	cout << "a" <<  endl;
+	cout << "num of corners: " << corners.size() << endl;
+	
 	worldSpaceCornerPoints.push_back(corners);
-	cout << "b" << endl;
 }
 
 bool CameraCalibrator::saveCameraCalibration() {
@@ -98,20 +95,18 @@ bool CameraCalibrator::saveCameraCalibration() {
 	return false;
 }
 
-void CameraCalibrator::performCalibration() {
+void CameraCalibrator::performCalibration(int skip) {
 	
-	int skip = 15;
 	int skipped = 0;
 	while (true)
 	{
 		if (!videoCapture->read(frame))
 		{
-			cout << "muhaha" << endl;
+			cout << "capture was not successfull. The program terminates." << endl;
 			break;
 		}
 		if (skipped < skip) {
 			skipped++;
-			//cout << "skipped" << endl;
 		}
 		else {
 			skipped = 0;
@@ -127,7 +122,6 @@ void CameraCalibrator::performCalibration() {
 				imshow("Webcam", drawToFrame);
 				savedImages.push_back(drawToFrame);
 				checkerboardImageSpacePoints.push_back(foundPoints);
-				cout << "found" << endl;
 
 				cout << "saved images: " << savedImages.size() << endl;
 				if (checkerboardImageSpacePoints.size() > 30)
@@ -139,7 +133,9 @@ void CameraCalibrator::performCalibration() {
 					vector<Mat> rVectors, tVectors;
 					distanceCoefficients = Mat::zeros(8, 1, CV_64F);
 
+					cout << "calibrating camera ...";
 					calibrateCamera(worldSpaceCornerPoints, checkerboardImageSpacePoints, chessboardDimensions, cameraMatrix, distanceCoefficients, rVectors, tVectors);
+					cout << " [OK]" << endl;
 
 					saveCameraCalibration();
 					cout << "rVectors.size: " << rVectors.size() << endl;
