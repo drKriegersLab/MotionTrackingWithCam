@@ -25,6 +25,8 @@ int main(int argc, char* argv[]) {
 	string calibPath;
 	int interSectHor, interSectVer;
 	float calibrationSquareDimension; // = 0.046f;
+
+	/* input parser */
 	const String keys =
 		"{help || show the possible arguments}"
 		"{inputType | file | input type: file/webcam} "		
@@ -139,18 +141,19 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 	
+
 	//string videoPath = "c:\\__DATA__\\00_PetProjects\\MovingDetection\\MVI_7646.MP4";
 	//string outputVideoPath = "c:\\__DATA__\\00_PetProjects\\MovingDetection\\output.MP4";
 	
 	Size chessBoardIntersections = Size(interSectVer, interSectHor);
 	
-	// init modules	
+	/* init modules	 */
 	VideoDecoder decoder = VideoDecoder(readFromFile, calibPath, chessBoardIntersections, calibrationSquareDimension, videoPath);
 	string logFileName = "measLog.csv";
 	Visualization visualization = Visualization(outputVideoPath, decoder.getVidCaptureObject(), true);
 	PositionEstimator estimator = PositionEstimator(20);
 	
-	
+	/* MAIN */
 	bool isFrameValid;
 	if (readFromFile) {
 		decoder.readAllFrames();

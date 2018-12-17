@@ -150,11 +150,11 @@ void Visualization::dispFrame(int numOfFrames, bool captured) {
 	labels.push_back(label);
 
 	label = "measured posX: " + to_string(realPos.x);
-	putText(txtBox, label, Point(0, (labelSize.height + 5) * 2), font, fontScale, Scalar(200, 0, 0), fontThickness, 1);
+	putText(txtBox, label, Point(0, (labelSize.height + 5) * 2), font, fontScale, Scalar(255, 50, 50), fontThickness, 1);
 	labels.push_back(label);
 
 	label = "measured posY: " + to_string(realPos.y);
-	putText(txtBox, label, Point(0, (labelSize.height + 5) * 3), font, fontScale, Scalar(200, 0, 0), fontThickness, 1);
+	putText(txtBox, label, Point(0, (labelSize.height + 5) * 3), font, fontScale, Scalar(255, 50, 50), fontThickness, 1);
 	labels.push_back(label);
 
 	label = "filtered posX: " + to_string(filteredPos.x);
