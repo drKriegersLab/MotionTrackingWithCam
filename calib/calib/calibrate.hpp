@@ -12,7 +12,7 @@ public:
 	/*
 	* Constructor of camera calibration. It initializes the object with the default parameters.
 	*/
-	CameraCalibrator(std::string outputFileName);
+	CameraCalibrator(bool readFromFile, std::string inputFileName, std::string outputFileName, cv::Size intersectionNum, float chessSquareDim);
 
 	/*
 	* Method for performing the calibration

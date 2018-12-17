@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
 	float calibrationSquareDimension; // = 0.046f;
 	const String keys =
 		"{help || show the possible arguments}"
-		"{input | file | input type: file/webcam} "		
+		"{inputType | file | input type: file/webcam} "		
 		"{source || UNC path of the loaded file}"
 		"{output || UNC path of the ouput video file}"
 		"{calibPath | canon_cam_calib_pars_hd_3x3.txt | path of the calibration file }"
@@ -45,8 +45,8 @@ int main(int argc, char* argv[]) {
 	}
 	
 	//  INPUT 
-	if (parser.has("input")) {
-		if (parser.get<string>("input") == "file") {
+	if (parser.has("inputType")) {
+		if (parser.get<string>("inputType") == "file") {
 			readFromFile = true;
 			cout << "[INPUT] input type: file"<< endl;
 		}
@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
 	// INTERSECTIONS NUMBER VERTICALLY
 	if (parser.has("intersectVer")) {
 		interSectVer = parser.get<int>("intersectVer");
-		cout << "[INPUT] number of intersections vertically in the chessboard: " << interSectHor << endl;
+		cout << "[INPUT] number of intersections vertically in the chessboard: " << interSectVer << endl;
 	}
 	else {
 		cout << "[WRONG INPUT] vertical intersection number not specified " << endl;

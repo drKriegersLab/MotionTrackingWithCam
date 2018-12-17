@@ -21,4 +21,19 @@ TrakingMotion/TrakingMotion/mousetracking\.cpp
 
 TrakingMotion/TrakingMotion/mousetracking\.h
 
-TrackingMotion/x64/
+
+TrackingMotion/TrakingMotion/x64/Debug/TrackingMotion\.tlog/
+
+TrackingMotion/TrakingMotion/x64/Debug/TrakingMotion\.tlog/
+
+*.obj
+
+*.idb
+
+*.pdb
+
+*.MP4
+
+*.exe
+
+TrackingMotion/\.vs/

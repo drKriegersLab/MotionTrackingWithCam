@@ -16,16 +16,20 @@ using namespace std;
 
 
 
-CameraCalibrator::CameraCalibrator(string outputFileName) {
+CameraCalibrator::CameraCalibrator(bool readFromFile, string inputFileName, string outputFileName, Size intersectionNum, float chessSquareDim) {
 	outFilePath = outputFileName;
 
 	//chessboardDimensions = Size(7, 7);
-	chessboardDimensions = Size(3, 3);
-	//calibrationSquareDimension = 0.02f;
-	calibrationSquareDimension = 0.046f;
+	chessboardDimensions = intersectionNum;
+	calibrationSquareDimension = chessSquareDim;
 
-	//videoCapture = new VideoCapture(0);
-	videoCapture = new VideoCapture("c:\\__DATA__\\00_PetProjects\\MovingDetection\\calib_VGA_4x4.MP4");
+
+	if (readFromFile) {		
+		videoCapture = new VideoCapture(inputFileName);
+	}
+	else {
+		videoCapture = new VideoCapture(0);
+	}
 	cameraMatrix = Mat::eye(3, 3, CV_64F);		
 
 
@@ -126,7 +130,7 @@ void CameraCalibrator::performCalibration() {
 				cout << "found" << endl;
 
 				cout << "saved images: " << savedImages.size() << endl;
-				if (checkerboardImageSpacePoints.size() > 27)
+				if (checkerboardImageSpacePoints.size() > 30)
 				{
 					worldSpaceCornerPoints.resize(checkerboardImageSpacePoints.size(), worldSpaceCornerPoints[0]);
 					vector<Point3f> oneReal = worldSpaceCornerPoints[0];
