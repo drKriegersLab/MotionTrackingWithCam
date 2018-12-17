@@ -40,7 +40,19 @@ int main(int argc, char* argv[]) {
 	
 	// HELP
 	if (parser.has("help")) {
-		parser.printMessage();	
+		cout << "input arguments:" << endl;
+		parser.printMessage();
+		cout << endl << "This program tracks the movement of your camera based on the distance from a black&white chessboard" << endl;
+		cout << "marker. For filtering out the the measurement noise, it uses a Kalman-Filter. In other hand, you can watch" << endl;
+		cout << "the progress in live in a different window. The program will save the shown window to a video and the" << endl;
+		cout << "calculated values to a txt file (measLog.txt)" << endl;
+		cout << endl << "What you need to do?" << endl;
+		cout << "	- get a black and white chessboard as marker and calibrate the camera with calib.exe" << endl;
+		cout << "	- give the calibration results to the program (calibPath)" << endl;
+		cout << "	- specify the chessboard's physical parameters (intersectHor, intersectVer, squareDim)" << endl;
+		cout << "	- specify the input source (inputType, source)" << endl;
+		cout << "	- specify the output file (video file)" << endl;
+		cout << "	- start the program and watch the results" << endl;
 		return 1;
 	}
 	

@@ -22,12 +22,14 @@ const Size chessboardDimensions = Size(7, 7);
 
 int main(int argc, char* argv[])
 {
+	/* variable definitions */
 	bool readFromFile;
 	string videoPath;
 	string outputFile;
 	int interSectHor, interSectVer;
 	float calibrationSquareDimension;
 
+	/* input parser */
 	const String keys =
 		"{help || show the argument list}"
 		"{inputType | file | input type: file/webcam} "
@@ -40,7 +42,15 @@ int main(int argc, char* argv[])
 	CommandLineParser parser(argc, argv, keys);
 
 	if (parser.has("help")) {
+		cout << "possible arguments:" << endl;
 		parser.printMessage();
+		cout << endl << "This program creates the camera matrices, which are essential to further image processing" << endl;
+		cout << "What you need to do?" << endl;
+		cout << "	- get a black and white chessboard as marker" << endl;
+		cout << "	- measure the width of the squares  --> it will be the squaredim"<< endl;
+		cout << "	- specify the number of intersections --> it will be the intersectHor and intersectVer" << endl;
+		cout << "	- shoot a video from it or use your webcam (inputType)" << endl;
+		cout << "	- specify the output file (it will be a txt with camera matrix and distance coefficients" << endl;
 		return 1;
 	}
 
@@ -115,6 +125,8 @@ int main(int argc, char* argv[])
 		parser.printMessage();
 		return 1;
 	}
+
+	 /* main part */
 
 	CameraCalibrator cameraCalibrator(readFromFile, videoPath, outputFile, Size(interSectHor, interSectVer), calibrationSquareDimension);
 	cameraCalibrator.performCalibration();
