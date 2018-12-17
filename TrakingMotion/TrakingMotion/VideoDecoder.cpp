@@ -143,6 +143,7 @@ void VideoDecoder::release() {
 
 void VideoDecoder::readAllFrames() {
 
+	cout << "capture all frames ..";
 	while (true) {
 		Mat frame;
 		if (!capture->read(frame))
@@ -152,8 +153,10 @@ void VideoDecoder::readAllFrames() {
 
 		capturedFrames.push_back(frame);
 		waitKey(1);
-		cout << "captured frames: " << capturedFrames.size() << endl;
+		cout << ".";
+		
 	}
+	cout << "captured frames: " << capturedFrames.size() << endl;
 }
 
 bool VideoDecoder::decodeGivenFrame(Mat frame) {

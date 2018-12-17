@@ -14,97 +14,127 @@
 #include "Visualization.h"
 #include "PositionEstimator.h"
 
-#define CALIB_PARLIST_WEBCAM 0
-#define CALIB_PARLIST_CANON_VGA_7X7 1
-#define CALIB_PARLIST_CANON_VGA_3X3 2
-#define CALIB_PARLIST_CANON_HD_3X3 3
-#define CALIB_PARLIST_CANON_HD_7X7 4
-#define CALIB_PARLIST_CANON_FHD_7x7 5
-
-
-
 using namespace std;
 using namespace cv;
 
 int main(int argc, char* argv[]) {
 	
+	bool readFromFile;
 	string videoPath;
 	string outputVideoPath;
-
+	string calibPath;
+	int interSectHor, interSectVer;
+	float calibrationSquareDimension; // = 0.046f;
 	const String keys =
 		"{help || show the possible arguments}"
-		//"{flag | | true if the input source is specified video file. If it false, the program will use the first found webcam}"
-		//"{sourcetype s | 0 | camera source type, which specifies the camera matrices (webcam/camera vga 3x3/camera hd 7x7}"
+		"{input | file | input type: file/webcam} "		
 		"{source || UNC path of the loaded file}"
-		"{output || UNC path of the ouput video file}";
+		"{output || UNC path of the ouput video file}"
+		"{calibPath | canon_cam_calib_pars_hd_3x3.txt | path of the calibration file }"
+		"{intersectHor | 3 | horizontal intersection number of the chessboard marker}"
+		"{intersectVer | 3 | horizontal intersection number of the chessboard marker}"
+		"{squaredim | 0.046 | size of each square in the chessboard marker }";
 
 
 	CommandLineParser parser(argc, argv, keys);
 	
+	// HELP
 	if (parser.has("help")) {
-		parser.printMessage();		
+		parser.printMessage();	
+		return 1;
 	}
 	
+	//  INPUT 
+	if (parser.has("input")) {
+		if (parser.get<string>("input") == "file") {
+			readFromFile = true;
+			cout << "[INPUT] input type: file"<< endl;
+		}
+		else {
+			readFromFile = false;
+			cout << "[INPUT] input type: webcam" << endl;
+		}
+	}
+	else {
+		cout << "[WRONG INPUT] input not specified" << endl;
+		parser.printMessage();
+		return 1;
+	}
+
+	// SOURCE
 	if (parser.has("source")) {
 		videoPath = parser.get<string>("source");
-		cout << "specified video path: " << videoPath << endl;
+		cout << "[INPUT] specified video path: " << videoPath << endl;
 	}
 	else {
-		cout << "source path had not been specified";
+		cout << "[WRONG INPUT] source path had not been specified" << endl;
 		parser.printMessage();
 		return 1;
 	}
-
+	
+	// OUTPUT
 	if (parser.has("output")) {
 		outputVideoPath = parser.get<string>("output");
-		cout << "specified output video path: " << outputVideoPath << endl;
+		cout << "[INPUT] specified output video path: " << outputVideoPath << endl;
 	}
 	else {
-		cout << "output path had not been specified";
+		cout << "[WRONG INPUT] output path had not been specified" << endl;
+		parser.printMessage();
+		return 1;
+	}
+
+	// CALIBRATION PATH
+	if (parser.has("calibPath")) {
+		calibPath = parser.get<string>("calibPath");
+		cout << "[INPUT] calibration file: " << calibPath << endl;
+	}
+	else {
+		cout << "[WRONG INPUT] calibration file not specified " << endl;
+		parser.printMessage();
+		return 1;
+	}
+
+	// INTERSECTIONS NUMBER HORIZONTALLY
+	if (parser.has("intersectHor")) {
+		interSectHor = parser.get<int>("intersectHor");
+		cout << "[INPUT] number of intersections horizontally in the chessboard " << interSectHor << endl;
+	}
+	else {
+		cout << "[WRONG INPUT] horizontal intersection number not specified " << endl;
+		parser.printMessage();
+		return 1;
+	}
+
+	// INTERSECTIONS NUMBER VERTICALLY
+	if (parser.has("intersectVer")) {
+		interSectVer = parser.get<int>("intersectVer");
+		cout << "[INPUT] number of intersections vertically in the chessboard: " << interSectHor << endl;
+	}
+	else {
+		cout << "[WRONG INPUT] vertical intersection number not specified " << endl;
+		parser.printMessage();
+		return 1;
+	}
+
+	// SQUARE DIMENSION
+	if (parser.has("squaredim")) {
+		calibrationSquareDimension = parser.get<float>("squaredim");
+		cout << "[INPUT] squaredim:  " << calibrationSquareDimension << endl;
+	}
+	else {
+		cout << "[WRONG INPUT] squaredim not specified" << endl;
 		parser.printMessage();
 		return 1;
 	}
 	
-	 
-	// init base variables
-	bool readFromFile = true;
-	int sourceType = CALIB_PARLIST_CANON_HD_3X3;
-	int chessBoardIntersectionsVertical = 3;
-	int chessBoardIntersectionsHorizontal = 3;
-	float calibrationSquareDimension = 0.046f;
 	//string videoPath = "c:\\__DATA__\\00_PetProjects\\MovingDetection\\MVI_7646.MP4";
 	//string outputVideoPath = "c:\\__DATA__\\00_PetProjects\\MovingDetection\\output.MP4";
-
-	string calibPath;
-	switch (sourceType)
-	{
-	case CALIB_PARLIST_WEBCAM:
-		calibPath = "canon_cam_calib_pars.txt";
-		break;	
-	case CALIB_PARLIST_CANON_VGA_7X7:
-		calibPath = "canon_cam_calib_pars_vga.txt";
-		break;
-	case CALIB_PARLIST_CANON_VGA_3X3:
-		calibPath = "canon_cam_calib_pars_vga_3x3.txt";
-		break;
-	case CALIB_PARLIST_CANON_HD_3X3:
-		calibPath = "canon_cam_calib_pars_hd_3x3.txt";
-		break;
-	case CALIB_PARLIST_CANON_HD_7X7:
-		calibPath = "canon_cam_calib_pars_hd_7x7.txt";
-		break;
-	case CALIB_PARLIST_CANON_FHD_7x7:
-		calibPath = "canon_cam_calib_pars.txt";
-		break;
-	default: // load the webcam parameter list
-		calibPath = "canon_cam_calib_pars.txt";
-		break;
-	}
 	
-	Size chessBoardIntersections = Size(chessBoardIntersectionsVertical, chessBoardIntersectionsHorizontal);
+	Size chessBoardIntersections = Size(interSectVer, interSectHor);
 	
 	// init modules	
 	VideoDecoder decoder = VideoDecoder(readFromFile, calibPath, chessBoardIntersections, calibrationSquareDimension, videoPath);
+	string logFileName = "measLog.csv";
 	Visualization visualization = Visualization(outputVideoPath, decoder.getVidCaptureObject(), true);
 	PositionEstimator estimator = PositionEstimator(20);
 	
@@ -113,7 +143,7 @@ int main(int argc, char* argv[]) {
 	if (readFromFile) {
 		decoder.readAllFrames();
 		vector<Mat> frames = decoder.getcapturedFrames();
-
+		cout << "decoding frames ... " << endl;
 		for (int cycFrame = 0; cycFrame < frames.size(); cycFrame++) {
 			isFrameValid = decoder.decodeGivenFrame(frames[cycFrame]);
 			if (isFrameValid) {
@@ -133,6 +163,7 @@ int main(int argc, char* argv[]) {
 				break;
 		}
 		cout << "no more frames" << endl;
+		visualization.saveDataToMeasLog("measlog.txt");
 	}
 	else {
 		int cycFrame = 0;
@@ -164,8 +195,10 @@ int main(int argc, char* argv[]) {
 				int keyboard = waitKey(1);
 
 				// escape				
-				if (keyboard == 'q' || keyboard == 27)
+				if (keyboard == 'q' || keyboard == 27) {
+					cout << "keyboard interrupt" << endl;
 					break;
+				}
 			}
 			else {
 				cout << "no more frames" << endl;

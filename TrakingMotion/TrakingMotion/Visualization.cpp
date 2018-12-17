@@ -5,6 +5,7 @@
 #include "opencv2/videoio.hpp"
 #include "PositionEstimator.h"
 #include <iostream>
+#include <string>
 
 using namespace std;
 using namespace cv;
@@ -15,7 +16,8 @@ using namespace cv;
 *	- init video writer class
 *	- init graph
 */
-Visualization::Visualization(string outputPath, VideoCapture* inputVideo, bool writeVideo) {	
+Visualization::Visualization(string outputPath, VideoCapture* inputVideo, bool writeVideo) {
+		
 	// specifying each frame's dimensions
 	graphFrameSizeHeight = 640;
 	graphFrameSizeWidth = 640;
@@ -40,12 +42,14 @@ Visualization::Visualization(string outputPath, VideoCapture* inputVideo, bool w
 
 
 Visualization::~Visualization() {	
+	//measLogFile.close();
 	//videoWriter.release();
 	//delete this;
 }
 
 void Visualization::release() {
 	videoWriter.release();
+	//measLogFile.close();
 }
 
 
@@ -105,6 +109,8 @@ void Visualization::addFrameToGraphWindow(Mat newCamFrame) {
 *  - put information labels to the left upper corner of the frame
 */
 void Visualization::dispFrame(int numOfFrames, bool captured) {
+
+	lastFrameNum = numOfFrames;
 	
 	Mat summaryFrame = Mat::zeros(Size(summaryFrameWidth, summaryFrameHeight), CV_8UC3);
 	
@@ -135,28 +141,28 @@ void Visualization::dispFrame(int numOfFrames, bool captured) {
 	Mat txtBox = Mat::zeros(Size(txtBoxMaxWidth, txtBoxMaxHeight), CV_8UC3);
 	for (int cycRow = 0; cycRow < txtBox.rows; cycRow++) {
 		for (int cycCol = 0; cycCol< txtBox.cols; cycCol++) {
-			txtBox.at<Vec3b>(Point(cycCol, cycRow)) = Vec3b(40, 40, 40);
+			txtBox.at<Vec3b>(Point(cycCol, cycRow)) = Vec3b(30, 30, 30);
 		}
 	}
 
 	// add other labels
-	putText(txtBox, label, Point(0, labelSize.height + 5), font, fontScale, Scalar(0, 0, 200), 1, 1);
+	putText(txtBox, label, Point(0, labelSize.height + 5), font, fontScale, Scalar(0, 200, 0), 1, 1);
 	labels.push_back(label);
 
 	label = "measured posX: " + to_string(realPos.x);
-	putText(txtBox, label, Point(0, (labelSize.height + 5) * 2), font, fontScale, Scalar(0, 153, 204), fontThickness, 1);
+	putText(txtBox, label, Point(0, (labelSize.height + 5) * 2), font, fontScale, Scalar(200, 0, 0), fontThickness, 1);
 	labels.push_back(label);
 
 	label = "measured posY: " + to_string(realPos.y);
-	putText(txtBox, label, Point(0, (labelSize.height + 5) * 3), font, fontScale, Scalar(0, 153, 204), fontThickness, 1);
+	putText(txtBox, label, Point(0, (labelSize.height + 5) * 3), font, fontScale, Scalar(200, 0, 0), fontThickness, 1);
 	labels.push_back(label);
 
 	label = "filtered posX: " + to_string(filteredPos.x);
-	putText(txtBox, label, Point(0, (labelSize.height + 5) * 4), font, fontScale, Scalar(255, 153, 0), fontThickness, 1);
+	putText(txtBox, label, Point(0, (labelSize.height + 5) * 4), font, fontScale, Scalar(0, 0, 200), fontThickness, 1);
 	labels.push_back(label);
 
 	label = "filtered posY: " + to_string(filteredPos.y);
-	putText(txtBox, label, Point(0, (labelSize.height + 5) * 5), font, fontScale, Scalar(255, 153, 0), fontThickness, 1);
+	putText(txtBox, label, Point(0, (labelSize.height + 5) * 5), font, fontScale, Scalar(0, 0, 200), fontThickness, 1);
 	labels.push_back(label);
 
 	// determine the necessary size of the container box and cut it
@@ -218,5 +224,32 @@ void Visualization::updateGraph(std::vector<Coordinates> relativePositions, std:
 		posYbefore = graphFrameSizeHeight - (int)(filteredPosPrev.x * scale);
 
 		line(graphFrame, Point(posX, posY), Point(posXbefore, posYbefore), filteredPosColor, lineWidth);
+
+		addNewSaveEntry();
 	}
+}
+
+void Visualization::addNewSaveEntry() {
+	//measLogFile << lastFrameNum << realPos.x << realPos.y << filteredPos.x << filteredPos.y << endl;
+	//char* entry;
+
+	const string entry = to_string(lastFrameNum) + ";" + to_string(realPos.x) + ";" + to_string(realPos.y) + ";" + to_string(filteredPos.x) + ";" + to_string(filteredPos.y);	
+	measLogLines.push_back(entry);
+
+}
+
+void Visualization::saveDataToMeasLog(string measLogOutPath) {
+	
+	
+	ofstream measLogFile(measLogOutPath);
+
+	if (measLogFile) {
+		cout << "save measurement data to: " << measLogOutPath << " ... ";
+		for (int cycEntry = 0; cycEntry < measLogLines.size(); cycEntry++) {
+			measLogFile << measLogLines[cycEntry] << endl;
+		}
+	}
+	//measLogFile << flush();
+	measLogFile.close();
+	cout << "[OK]" << endl;
 }
